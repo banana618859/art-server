@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://www.layuicdn.com/layui/layui.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://www.layuicdn.com/layui/css/layui.css" />
+
+    <script src="http://lib.sinaapp.com/js/jquery/1.9.1/jquery-1.9.1.min.js"></script>
+</head>
+<body>
+    <h3>
+        Spring boot Demo
+    </h3>
+    <div>
+        <input type="text" id="age"
+               style="width:150px;display: inline-block;"
+               name="title" class="layui-input">
+        <button id="search">
+            查询123:
+        </button>
+    </div>
+    <hr>
+    <table id="demo" lay-filter="test"></table>
+
+<script>
+var mytable,mylayer;
+
+layui.use(['table','layer'], function(){
+        var table= mytable = layui.table;
+        var layer = mylayer = layui.layer;
+      });
+
+var myCols = [
+            [
+            {field: 'id', title: '序号', width:100, sort: true, type:"numbers"}
+            ,{field: 'username', title: '用户名', width:200}
+            ,{field: 'password', title: '密码', width:150}
+            ,{field: 'sex', title: '性别', width:200}
+          ]
+          ]
+        $('#search').click(()=>{
+            console.log('search--');
+            doSearch();
+        })
+    function doSearch(){
+        mytable.render({
+            elem: '#demo'
+            ,defaultToolbar: ['filter', 'print', 'exports', {
+                title: '提示' //标题
+                ,layEvent: 'LAYTABLE_TIPS' //事件名，用于 toolbar 事件中使用
+                ,icon: 'layui-icon-tips' //图标类名
+              }]
+            ,height: 480
+            ,page: true
+            ,url: '/kkk/stu'
+            ,cols: myCols
+            // data: data0
+            ,where:{
+              age: $('#age').val() || 10
+            }
+          });
+    }
+    setTimeout(()=>{
+        doSearch() // 先加载一次
+    },2000)
+</script>
+</body>
+</html>

@@ -1,0 +1,295 @@
+<!--
+ * @Descripttion: 
+ * @Author: yizheng.yuan
+ * @Date: 2020-03-20 09:17:33
+ * @LastEditors: yizheng.yuan
+ * @LastEditTime: 2020-06-26 18:47:50
+ -->
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="utf-8" />
+      <script src="https://www.layuicdn.com/layui/layui.js"></script>
+<!--      <script src="https://libs.baidu.com/jquery/1.7.2/jquery.min.js"></script>-->
+    <script
+            src="http://code.jquery.com/jquery-3.5.1.min.js"
+            integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0="
+            crossorigin="anonymous"></script>
+      <link rel="stylesheet" type="text/css" href="https://www.layuicdn.com/layui/css/layui.css" />
+      <style>
+        /* .layui-table-cell{padding: 0;} */
+        .blockA{
+          display: block;
+          width: 100%;
+          height: 100%;
+        }
+      </style>
+    </head>
+
+  <body>
+    <div style="height: 60px; line-height: 60px; font-size: 24px; padding: 0 10px;">
+      导出excel实例-可筛系列-穿梭框
+    </div>
+    <p style="padding: 10px 20px;">
+        <button id="export" class="layui-btn layui-btn-danger">导出excel</button>
+    </p>
+    <hr>
+    <table id="demo" lay-filter="test"></table>
+
+    <script>
+    var mytable,mypagination,mylayer;
+    let finalTop=[];
+    let selectCol=[]
+    var myCols = [
+      [
+            {field: 'index', title: '序号', width:100, sort: true, type:"numbers"}
+            ,{field: 'username', title: '用户名', width:200}
+            ,{field: 'password', title: '密码', width:150}
+            ,{field: 'age', title: '年龄', width:150}
+            ,{field: 'logindate', title: '登录时间', width:200}
+          ]
+        ]
+
+      let topCol = myCols[0]
+      let topArr = [];
+      for(let i=1;i<topCol.length;i++){
+        let one = {
+          value: i,
+          field: topCol[i].field,
+          title: topCol[i].title,
+          able: true
+        }
+        topArr.push(one)
+      }
+      for(let i=0;i<topArr.length;i++){
+        if(topArr[i].able){
+          finalTop.push(topArr[i].field)
+        }
+      }
+
+
+    // 导出excel事件
+    $('#export').click(function(){
+      console.log('export:',finalTop);
+
+      mylayer.open({
+        type: 2,
+        content: '/kkk/csk.html',
+        area: ['550px', '550px'] //自定义文本域宽高
+        ,btn: ['确定']
+        ,success: function(layero, index){
+          var body = layer.getChildFrame('body', index);
+          //得到iframe页的窗口对象，执行iframe页的方法：iframeWin.method();
+          var iframeWin = window[layero.find('iframe')[0]['name']]; 
+          console.log('topArr:',topArr)
+          iframeWin.insertCol(topArr)
+          // console.log(body.html()) //得到iframe页的body内容
+          // body.find('input').val('Hi，我是从父页来的')
+        }
+        ,yes : function(index) {
+          console.log('弹框关闭了-yes');
+          //当点击‘确定’按钮的时候，获取弹出层返回的值
+          var res = window["layui-layer-iframe" + index].callbackdata();
+            //打印返回的值，看是否有我们想返回的值。
+            console.log(res);
+            exportFun(res)
+
+            //最后关闭弹出层
+            layer.close(index);
+        }
+        ,cancel : function(index) {
+          console.log('弹框关闭了');
+          //当点击‘确定’按钮的时候，获取弹出层返回的值
+          var res = window["layui-layer-iframe" + index].callbackdata();
+              //打印返回的值，看是否有我们想返回的值。
+              console.log(res);
+              selectCol = res;
+              //最后关闭弹出层
+              layer.close(index);
+              exportFun(res)
+        }
+
+      });
+
+    })
+
+    
+    function exportFun(res){
+      // 导出函数
+      let fArr = []
+      for(let i=0;i<res.length;i++){
+        for(let s=0;s<topArr.length;s++){
+          if(topArr[s].value == res[i]/1){
+            fArr.push(topArr[s].field);
+            break;
+          }
+        }
+      }
+      console.log('fArr:',fArr);
+      if(fArr.length==0){
+        mylayer.msg(
+          '没有要导出的列，或尚未保存...导出无效！', 
+          {
+              icon: 16, 
+              shade: 0.3, 
+              time: 3000 // 加载图标自动关闭时间
+        });
+        return;
+      }
+
+      // 加载遮罩页面
+      //time:0，不会自动关闭
+      loading = mylayer.msg(
+          '正在导出excel，请稍后...', 
+          {
+            icon: 16, 
+            shade: 0.3, 
+            time: 0 // 加载图标自动关闭时间
+      });
+
+      // 传给后台
+      $.ajax({
+        url: 'http://localhost:7000/getAll', //数据接口
+        data:{
+          allCol: fArr
+        },
+        success:function(result){
+          console.log('res-result:',result);
+          setTimeout(()=>{
+            // 后台返回成功后，关闭遮罩加载页面
+            mylayer.close(loading);
+          },3000)
+        },
+        error:function(error){
+          console.log('err:',error);
+        }
+      });
+    }
+    
+    
+    layui.use(['table','laypage','layer'], function(){
+        var table = mytable = layui.table;
+        var laypage = mypagination = layui.laypage;
+        var $ =  layui.jquery;
+        var layer = mylayer = layui.layer;
+
+        
+        function atable(){
+          // 本地数据渲染
+          mytable.render({
+            elem: '#demo'
+            ,height: 480
+            ,page: true
+            ,url:'http://localhost:7000/getAll'
+            ,cols: myCols
+            // data: data0
+            ,where:{
+              age: $('#age').val()
+            }
+          });
+
+          mytable.on('edit(test)', function(obj){ //注：edit是固定事件名，test是table原始容器的属性 lay-filter="对应的值"
+            console.log('编辑完毕：',obj)
+            console.log(obj.value); //得到修改后的值
+            console.log(obj.field); //当前编辑的字段名
+            console.log(obj.data); //所在行的所有相关数据  
+          });
+
+          //监听工具条--监听单元格
+          mytable.on('tool(test)', function (obj) {
+              var data = obj.data;
+              console.log('监听工具条:',obj)
+              console.log('监听事件:',obj.event)
+              console.log('点击行数据:',obj.data)
+              console.log('点击值:',obj.data[obj.event])
+          })
+
+          //监听事件
+          table.on('toolbar(test)', function(obj){
+            console.log('toolbar-event:',obj);
+            if(obj.event == "LAYTABLE_COLS"){
+              // 绑定事件
+              var allLi = $('.layui-table-tool-panel li');
+              console.log('allLi:',allLi);
+              for(let i=0;i<allLi.length;i++){
+                allLi[i].onclick=()=>{
+                  // console.log('event:',event);
+                  let myNodeName = event.target.nodeName;
+                  // console.log('click--myNodeName:',myNodeName);
+                  let myCheck;
+                  let colName;
+                  if(myNodeName == 'I' || myNodeName == 'SPAN'){
+                    let faNodeN = $(event.target).parent().parent()[0];
+                    let faNodeName = faNodeN.nodeName;
+                    // console.log('父节点：',faNodeName)
+                    myCheck = $(faNodeN).find('div').hasClass("layui-form-checked");
+                    colName = $(faNodeN).text()
+                  }else{
+                    let faNodeN = $(event.target).parent()[0];
+                    let faNodeName = faNodeN.nodeName;
+                    // console.log('父节点2：',faNodeName)
+                    myCheck = $(faNodeN).find('div').hasClass("layui-form-checked")
+                    colName = $(faNodeN).text()
+                  }
+                  console.log('选择:',myCheck,colName);
+                  // 筛选表头
+                  for(let i=0;i<topArr.length;i++){
+                    if(topArr[i].title == colName){
+                      topArr[i].able = myCheck
+                      break;
+                    }
+                  }
+                  finalTop = []
+                  for(let i=0;i<topArr.length;i++){
+                    if(topArr[i].able){
+                      finalTop.push(topArr[i].field)
+                    }
+                  }
+                  console.log('finalTop:',finalTop);
+                }
+              }
+            }
+            var checkStatus = table.checkStatus(obj.config.id);
+            switch(obj.event){
+              case 'add':
+                layer.msg('添加');
+              break;
+              case 'delete':
+                layer.msg('删除');
+              break;
+              case 'update':
+                layer.msg('编辑');
+              break;
+            };
+          });
+
+          table.on('checkbox(test)', function(obj){
+            console.log(obj.checked); //当前是否选中状态
+            console.log(obj.data); //选中行的相关数据
+            console.log(obj.type); //如果触发的是全选，则为：all，如果触发的是单选，则为：one
+          });
+          
+          // //监听行单击事件
+          // mytable.on('row(test)', function(obj){
+          //   console.log('event-row:',event.target.dataset)
+          //   console.log('row:',obj.tr) //得到当前行元素对象
+          //   console.log('row:',obj.data) //得到当前行数据
+          //   //obj.del(); //删除当前行
+          //   //obj.update(fields) //修改当前行数据
+          // })
+        }
+
+        atable()
+
+      $('#search').click(()=>{
+        console.log('搜索--');
+        atable()
+      })
+     
+  });
+    </script>
+    
+  </body>
+
+</html>

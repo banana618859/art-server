@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>table模块快速使用</title>
+        <script src="https://www.layuicdn.com/layui/layui.js"></script>
+        <link rel="stylesheet" type="text/css" href="https://www.layuicdn.com/layui/css/layui.css" />
+
+    </head>
+<body>
+adfsaf123
+<table id="demo" lay-filter="test"></table>
+
+<script>
+layui.use('table', function(){
+  var table = layui.table;
+console.log('第一个实例---123')
+  //第一个实例
+  table.render({
+    elem: '#demo'
+    ,height: 300
+    ,url: '/kkk/stu' //数据接口
+    ,page: true //开启分页
+    ,limit:1
+    ,limits: [1,2,3,4,5]
+    ,cols: [
+    [ //表头
+      {field: 'id', title: 'ID', width:80, sort: true, fixed: 'left'}
+      ,{field: 'username', title: '用户名', width:80}
+      ,{field: 'sex', title: '性别', width:80, sort: true}
+    ]
+    ]
+  });
+
+});
+</script>
+</body>
+</html>
